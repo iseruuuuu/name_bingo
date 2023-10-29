@@ -1,75 +1,19 @@
-import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:name_bingo_app/constants/name_list.dart';
-import 'package:name_bingo_app/history_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:name_bingo_app/home/home_screen_view_model.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  List<String> bingoList = [];
-  List<String> namesList = [];
-  var select = '';
-
-  late String selectedItem;
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    namesList = nameList;
-    selectedItem = 'ビンゴスタート!!';
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  void _updateSelectedItem() {
-    final random = Random();
-    int randomIndex = random.nextInt(namesList.length);
-    setState(() {
-      selectedItem = namesList[randomIndex];
-    });
-  }
-
-  void bingo() async {
-    if (namesList.isNotEmpty) {
-      select = '';
-      if (_timer?.isActive ?? false) {
-        _timer?.cancel();
-      } else {
-        _timer = Timer.periodic(const Duration(milliseconds: 10), (Timer t) {
-          _updateSelectedItem();
-        });
-      }
-      await Future.delayed(const Duration(seconds: 3));
-      final random = Random();
-      int index = random.nextInt(namesList.length);
-      String selectedName = namesList[index];
-      select = selectedName;
-      namesList.removeAt(index);
-      bingoList.add(selectedName);
-      _timer?.cancel();
-      setState(() {});
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(homeScreenViewModelProvider);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           TextButton(
-            onPressed: (_timer?.isActive ?? false)
+            onPressed: state.isActive
                 ? null
                 : () {
                     showDialog<void>(
@@ -117,18 +61,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 onTap: () {
                                   Navigator.pop(context);
-                                  bingoList.clear();
-                                  namesList = List.from(nameList);
-                                  select = '';
-                                  selectedItem = 'ビンゴスタート!!';
-                                  _timer?.cancel();
-                                  setState(() {});
+                                  ref
+                                      .read(
+                                          homeScreenViewModelProvider.notifier)
+                                      .reset();
                                 },
                               )
                             ],
                           );
                         });
-                    setState(() {});
                   },
             child: const Text(
               'リセット',
@@ -140,17 +81,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
         leading: TextButton(
-          onPressed: (_timer?.isActive ?? false)
+          onPressed: state.isActive
               ? null
               : () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => HistoryScreen(
-                        bingoList: bingoList,
-                      ),
-                    ),
-                  );
+                  ref
+                      .read(homeScreenViewModelProvider.notifier)
+                      .onTapHistory(context);
                 },
           child: const Text(
             '履歴',
@@ -165,9 +101,9 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: <Widget>[
             const Spacer(),
-            select.isEmpty
+            state.select.isEmpty
                 ? Text(
-                    selectedItem,
+                    state.selectedItem,
                     style: const TextStyle(
                       color: Colors.black,
                       fontSize: 40,
@@ -175,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   )
                 : Text(
-                    select,
+                    state.select,
                     style: const TextStyle(
                       color: Colors.black,
                       fontSize: 40,
@@ -184,7 +120,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
             const SizedBox(height: 50),
             TextButton(
-              onPressed: (_timer?.isActive ?? false) ? null : () => bingo(),
+              onPressed: state.isActive
+                  ? null
+                  : () =>
+                      ref.read(homeScreenViewModelProvider.notifier).bingo(),
               child: const Text(
                 'ビンゴ',
                 style: TextStyle(
