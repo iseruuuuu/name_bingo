@@ -7,7 +7,7 @@ part of 'home_screen_view_model.dart';
 // **************************************************************************
 
 String _$homeScreenViewModelHash() =>
-    r'44d000070217e5eea7fe9585d7f632cdbb72e7ea';
+    r'15eea1cd0f6117963cc9a3a29269227f30d161a8';
 
 /// See also [HomeScreenViewModel].
 @ProviderFor(HomeScreenViewModel)

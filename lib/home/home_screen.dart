@@ -5,6 +5,8 @@ import 'package:name_bingo_app/home/home_screen_view_model.dart';
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
+  //TODO 効果音をつける
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(homeScreenViewModelProvider);
